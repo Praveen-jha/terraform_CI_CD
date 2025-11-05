@@ -16,4 +16,5 @@ jobs:
         with:
             terraform_version: 1.6.0
       - name: Terraform fmt
+        working-directory: tfcode
         run: terraform fmt -check -recursive

@@ -1,4 +1,4 @@
-name: CI-CD PIPELINE
+name: CI-CD PIPELINE (Debug + Format)
 
 on:
   push:
@@ -8,19 +8,43 @@ on:
   workflow_dispatch:
 
 env:
-  TF_WORKING_DIR: terraform
-
-concurrency:
-  group: ci-cd-${{ github.ref }}
-  cancel-in-progress: true
+  TF_WORKING_DIR: terraform   # change this to the folder name that contains your .tf files
 
 jobs:
-  format:
-    name: Terraform Format Check
+  debug-and-format:
+    name: Debug repo layout and run terraform fmt
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Print current working dir and list repo root
+        run: |
+          echo "Runner working dir: $(pwd)"
+          echo "Listing top-level files and folders:"
+          ls -la
+
+      - name: Show nested path where runner expects the repo
+        run: |
+          echo "Full path where repo is checked out:"
+          echo "/home/runner/work/${{ github.repository_name }}/${{ github.repository_name }}"
+          echo "Listing that path (if exists):"
+          ls -la "/home/runner/work/${{ github.repository_name }}/${{ github.repository_name }}" || true
+
+      - name: List TF_WORKING_DIR resolved path
+        run: |
+          echo "TF_WORKING_DIR = '${{ env.TF_WORKING_DIR }}'"
+          echo "Checking if folder exists:"
+          if [ -d "${{ env.TF_WORKING_DIR }}" ]; then
+            echo "Folder '${{ env.TF_WORKING_DIR }}' exists. Listing contents:"
+            ls -la "${{ env.TF_WORKING_DIR }}"
+          else
+            echo "Folder '${{ env.TF_WORKING_DIR }}' does NOT exist at repo root."
+            echo "Did you place your Terraform files in a different folder?"
+            echo "Current repo layout (again):"
+            ls -la
+            exit 1
+          fi
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2

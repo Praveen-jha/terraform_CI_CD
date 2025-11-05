@@ -1,21 +1,32 @@
 name: CI-CD PIPELINE
+
 on:
   push:
-    branches: [praveen]
+    branches: [ praveen ]
   pull_request:
-    branches: [praveen]
-jobs: 
-  format:
-    name: build
-    runs-on: ubuntu-latest
+    branches: [ praveen ]
+  workflow_dispatch:
 
-  steps:
-    - name: checkout repository
-      uses: actions/checkout@v4
-    - name: Setup terraform
-      uses: hashicorp/setup-terraform@v2
-      with:
+env:
+  TF_WORKING_DIR: terraform
+
+concurrency:
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  format:
+    name: Terraform Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
           terraform_version: 1.6.0
-    - name: Terraform fmt
-      working-directory: terraform
-      run: terraform fmt -check -recursive
+
+      - name: Terraform fmt (check)
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform fmt -check -recursive
